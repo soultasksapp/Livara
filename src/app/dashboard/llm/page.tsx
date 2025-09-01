@@ -44,19 +44,6 @@ export default function LLMPage() {
   const { user } = useAuth()
   const router = useRouter()
   
-  // Check if user has super admin access
-  useEffect(() => {
-    if (user && user.role !== 'super_admin') {
-      router.push('/dashboard')
-      return
-    }
-  }, [user, router])
-
-  // Don't render anything for non-super admins
-  if (user && user.role !== 'super_admin') {
-    return null
-  }
-
   const defaultSettings: LLMSettings = {
     provider: "openai",
     openai_model: "gpt-5-mini",
@@ -79,6 +66,19 @@ export default function LLMPage() {
   const [ollamaModels, setOllamaModels] = useState<string[]>([])
   const [loadingOllamaModels, setLoadingOllamaModels] = useState(false)
   const { toast } = useToast()
+  
+  // Check if user has super admin access
+  useEffect(() => {
+    if (user && user.role !== 'super_admin') {
+      router.push('/dashboard')
+      return
+    }
+  }, [user, router])
+
+  // Don't render anything for non-super admins
+  if (user && user.role !== 'super_admin') {
+    return null
+  }
 
   useEffect(() => {
     console.log('[DEBUG] Component mounted, loading settings...')
