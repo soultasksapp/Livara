@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser } from '@/lib/database'
-import { hashPassword, requireAdmin } from '@/lib/auth'
+import { hashPassword } from '@/lib/auth'
 
-export const POST = requireAdmin(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   try {
     const { email, password, name, role = 'user', team_id } = await request.json()
 
@@ -62,4 +62,4 @@ export const POST = requireAdmin(async (request: NextRequest) => {
       { status: 500 }
     )
   }
-})
+}

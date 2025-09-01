@@ -1,20 +1,23 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
-import { useAuth } from "@/lib/auth-provider"
+import { useRouter } from "next/navigation"
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  })
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
-  const { login, isLoading } = useAuth()
+  const router = useRouter()
 
   // Create floating particles
   useEffect(() => {
@@ -22,7 +25,7 @@ export default function LoginPage() {
     if (!particlesContainer) return
 
     const particleCount = 50
-    particlesContainer.innerHTML = '' // Clear existing particles
+    particlesContainer.innerHTML = ''
 
     for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement('div')
@@ -34,23 +37,57 @@ export default function LoginPage() {
     }
   }, [])
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    const result = await login(email, password)
-    if (result.success) {
-      setShowSuccess(true)
-      setTimeout(() => {
-        setShowSuccess(false)
-      }, 3000)
-    } else if (result.error) {
-      setError(result.error)
-      // Auto-hide error message after 5 seconds
-      setTimeout(() => {
-        setError("")
-      }, 5000)
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return
     }
+
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setShowSuccess(true)
+        setTimeout(() => {
+          router.push('/login')
+        }, 2000)
+      } else {
+        setError(result.error || 'Registration failed')
+      }
+    } catch (error) {
+      setError('Network error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
   }
 
   return (
@@ -105,8 +142,8 @@ export default function LoginPage() {
           }
         }
 
-        /* Main login container matching chat widget style */
-        .login-container {
+        /* Main register container */
+        .register-container {
           position: relative;
           z-index: 10;
           background: rgba(0, 0, 0, 0.20);
@@ -120,7 +157,7 @@ export default function LoginPage() {
             0 0.5px 0 rgba(255, 255, 255, 0.06) inset,
             0 0 20px rgba(255, 255, 255, 0.02) inset;
           width: 100%;
-          max-width: 360px;
+          max-width: 380px;
           margin: 0 auto;
           opacity: 0;
           transform: translateY(20px) scale(0.95);
@@ -156,7 +193,7 @@ export default function LoginPage() {
         }
 
         .form-group {
-          margin-bottom: 20px;
+          margin-bottom: 16px;
           position: relative;
         }
 
@@ -202,7 +239,7 @@ export default function LoginPage() {
           background: rgba(255, 255, 255, 0.1);
         }
 
-        .login-button {
+        .register-button {
           width: 100%;
           background: rgba(255, 255, 255, 0.9);
           color: #1a1a1a;
@@ -223,17 +260,13 @@ export default function LoginPage() {
           gap: 7px;
         }
 
-        .login-button:hover {
+        .register-button:hover {
           transform: translateY(-1px) scale(1.02);
           box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           background: #ffffff;
         }
 
-        .login-button:active {
-          transform: translateY(0) scale(0.98);
-        }
-
-        .login-button:disabled {
+        .register-button:disabled {
           opacity: 0.6;
           cursor: not-allowed;
           transform: none;
@@ -254,8 +287,6 @@ export default function LoginPage() {
           100% { transform: rotate(360deg); }
         }
 
-
-        /* Error message floating outside the card */
         .error-message-floating {
           position: absolute;
           top: -25px;
@@ -280,7 +311,6 @@ export default function LoginPage() {
           transform: translateX(-50%) translateY(0);
         }
 
-        /* Success Animation Overlay */
         .success-overlay {
           position: fixed;
           top: 0;
@@ -304,118 +334,10 @@ export default function LoginPage() {
         }
 
         .success-animation {
-          position: relative;
-          width: 96px;
-          height: 96px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transform: scale(0.8);
-          transition: transform 0.3s ease-out;
-        }
-
-        .success-overlay.show .success-animation {
-          transform: scale(1);
-        }
-
-        .rotating-circle {
-          position: absolute;
-          width: 80px;
-          height: 80px;
-          border: 2px solid transparent;
-          border-top: 2px solid rgba(255, 255, 255, 0.8);
-          border-right: 2px solid rgba(255, 255, 255, 0.4);
-          border-radius: 50%;
-          animation: futuristicSpin 1.5s linear infinite;
-        }
-
-        .rotating-circle::before {
-          content: '';
-          position: absolute;
-          top: -2px;
-          left: -2px;
-          width: 80px;
-          height: 80px;
-          border: 2px solid transparent;
-          border-bottom: 2px solid rgba(255, 255, 255, 0.6);
-          border-left: 2px solid rgba(255, 255, 255, 0.2);
-          border-radius: 50%;
-          animation: futuristicSpin 2s linear infinite reverse;
-        }
-
-        .success-check {
-          width: 40px;
-          height: 40px;
-          background: rgba(255, 255, 255, 0.1);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: rgba(255, 255, 255, 0.9);
-          font-size: 20px;
-          font-weight: bold;
-          opacity: 0;
-          transform: scale(0.5);
-          animation: checkAppear 0.8s ease-out 1s forwards;
-          backdrop-filter: blur(5px);
-          border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        @keyframes futuristicSpin {
-          0% {
-            transform: rotate(0deg);
-            opacity: 0.4;
-          }
-          50% {
-            opacity: 1;
-          }
-          100% {
-            transform: rotate(360deg);
-            opacity: 0.4;
-          }
-        }
-
-        @keyframes checkAppear {
-          0% {
-            opacity: 0;
-            transform: scale(0.5);
-          }
-          50% {
-            opacity: 1;
-            transform: scale(1.1);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .success-text {
-          position: absolute;
-          bottom: -50px;
-          left: 50%;
-          transform: translateX(-50%);
-          color: rgba(255, 255, 255, 0.8);
-          font-size: 14px;
-          font-weight: 500;
-          opacity: 0;
-          animation: textFadeIn 0.5s ease-out 1.5s forwards;
           text-align: center;
-          letter-spacing: 0.5px;
+          color: white;
         }
 
-        @keyframes textFadeIn {
-          0% {
-            opacity: 0;
-            transform: translateX(-50%) translateY(10px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
-        }
-
-        /* Copyright text */
         .copyright {
           position: fixed;
           bottom: 20px;
@@ -428,63 +350,14 @@ export default function LoginPage() {
           letter-spacing: 0.3px;
           z-index: 1;
         }
-
-        @media (max-width: 480px) {
-          .login-container {
-            margin: 0;
-            padding: 24px 20px;
-            max-width: 340px;
-            border-radius: 16px;
-          }
-          
-          .welcome-text {
-            font-size: 18px;
-          }
-          
-          .subtitle {
-            font-size: 11px;
-            margin-bottom: 24px;
-          }
-          
-          .form-input {
-            padding: 12px 13px;
-            font-size: 13px;
-          }
-          
-          .login-button {
-            padding: 12px 17px;
-            font-size: 13px;
-          }
-        }
-
-        @media (max-width: 360px) {
-          .login-container {
-            max-width: 300px;
-            padding: 20px 16px;
-          }
-          
-          .welcome-text {
-            font-size: 16px;
-          }
-          
-          .form-input {
-            padding: 10px 12px;
-            font-size: 12px;
-          }
-          
-          .login-button {
-            padding: 10px 15px;
-            font-size: 12px;
-          }
-        }
       `}</style>
 
       <div className="min-h-screen w-full relative flex items-center justify-center p-4">
         {/* Floating particles */}
         <div className="particles" id="particles"></div>
 
-        <div className="login-container">
-          {/* Error message positioned at top of card */}
+        <div className="register-container">
+          {/* Error message */}
           {error && (
             <div 
               className={`error-message-floating ${error ? 'show' : ''}`}
@@ -495,20 +368,32 @@ export default function LoginPage() {
           )}
           
           <div className="logo-container">
-            <h1 className="welcome-text">Livara AI Agent</h1>
-            <p className="subtitle">Sign in to your account</p>
+            <h1 className="welcome-text">Create Account</h1>
+            <p className="subtitle">Join Livara AI Agent</p>
           </div>
 
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleRegister}>
+            <div className="form-group">
+              <input 
+                type="text" 
+                className="form-input" 
+                name="name" 
+                placeholder="Full name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                autoComplete="name"
+              />
+            </div>
+
             <div className="form-group">
               <input 
                 type="email" 
                 className="form-input" 
-                id="email" 
                 name="email" 
                 placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleInputChange}
                 required
                 autoComplete="email"
               />
@@ -518,13 +403,12 @@ export default function LoginPage() {
               <input 
                 type={showPassword ? "text" : "password"}
                 className="form-input" 
-                id="password" 
                 name="password" 
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password (min 6 characters)"
+                value={formData.password}
+                onChange={handleInputChange}
                 required
-                autoComplete="current-password"
+                autoComplete="new-password"
               />
               <button 
                 type="button" 
@@ -536,27 +420,47 @@ export default function LoginPage() {
               </button>
             </div>
 
-            <button type="submit" className="login-button" disabled={isLoading}>
+            <div className="form-group">
+              <input 
+                type={showConfirmPassword ? "text" : "password"}
+                className="form-input" 
+                name="confirmPassword" 
+                placeholder="Confirm password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+                required
+                autoComplete="new-password"
+              />
+              <button 
+                type="button" 
+                className="password-toggle" 
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label="Toggle confirm password visibility"
+              >
+                {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+
+            <button type="submit" className="register-button" disabled={isLoading}>
               {isLoading && <div className="loading-spinner"></div>}
-              <span>{isLoading ? "Signing in..." : "Sign In"}</span>
+              <span>{isLoading ? "Creating account..." : "Create Account"}</span>
             </button>
           </form>
 
           <div className="text-center mt-4">
-            <span className="text-gray-400 text-sm">Don't have an account? </span>
-            <Link href="/register" className="text-white hover:text-gray-300 text-sm font-medium underline">
-              Create Account
+            <span className="text-gray-400 text-sm">Already have an account? </span>
+            <Link href="/login" className="text-white hover:text-gray-300 text-sm font-medium underline">
+              Sign In
             </Link>
           </div>
-
         </div>
 
         {/* Success Animation Overlay */}
         <div className={`success-overlay ${showSuccess ? 'show' : ''}`}>
           <div className="success-animation">
-            <div className="rotating-circle"></div>
-            <div className="success-check">✓</div>
-            <div className="success-text">Login Successful</div>
+            <div className="text-2xl mb-4">✓</div>
+            <div className="text-lg">Account Created Successfully!</div>
+            <div className="text-sm mt-2">Redirecting to login...</div>
           </div>
         </div>
 

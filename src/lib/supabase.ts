@@ -1,19 +1,33 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl) throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
+if (!supabaseAnonKey) throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
 
 // Client for browser use (with RLS)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Admin client for server-side operations (bypasses RLS)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
+// Only create this on the server side
+export const supabaseAdmin = (() => {
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseServiceKey) {
+    // Return null if running on client side
+    if (typeof window !== 'undefined') {
+      return null as any
+    }
+    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
   }
-})
+  
+  return createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+})()
 
 // Database types based on your SQLite schema
 export interface User {
@@ -21,7 +35,7 @@ export interface User {
   email: string
   password_hash: string
   name: string
-  role: 'admin' | 'user'
+  role: 'super_admin' | 'admin' | 'user'
   team_id?: number
   is_active: boolean
   created_at: string
@@ -57,7 +71,6 @@ export interface TeamWidgetKey {
   last_used?: string
   usage_count: number
   created_by?: number
-  ngrok_url?: string
 }
 
 export interface WidgetConfig {

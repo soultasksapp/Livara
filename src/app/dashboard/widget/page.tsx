@@ -25,7 +25,6 @@ interface WidgetKey {
   usage_count?: number
   team_id?: number | null
   team_name?: string
-  ngrok_url?: string
 }
 
 interface WidgetConfig {
@@ -255,7 +254,7 @@ export default function WidgetPage() {
   const [selectedEmbedKey, setSelectedEmbedKey] = useState<WidgetKey | null>(null)
   const [previewWidgetLoaded, setPreviewWidgetLoaded] = useState(false)
   const [isLoadingWidget, setIsLoadingWidget] = useState(false)
-  const [systemConfig, setSystemConfig] = useState({ ngrok_url: '' })
+  const [baseUrl, setBaseUrl] = useState('')
 
   useEffect(() => {
     loadWidgetData()
@@ -263,24 +262,15 @@ export default function WidgetPage() {
   }, [])
 
   const loadSystemConfig = async () => {
-    try {
-      const response = await apiClient.get('/api/admin/system/ngrok-url')
-      if (response.success && response.data) {
-        setSystemConfig({ ngrok_url: response.data.ngrok_url })
-      }
-    } catch (error) {
-      console.error('Failed to load system config:', error)
+    // Set base URL to current domain
+    if (typeof window !== 'undefined') {
+      setBaseUrl(window.location.origin)
     }
   }
 
   const getDefaultUrl = () => {
-    // Find the most recently created API key with a URL
-    const keyWithUrl = widgetKeys
-      .filter(key => key.ngrok_url)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
-    
-    // Return the most recent key's URL, or fall back to system default
-    return keyWithUrl?.ngrok_url || systemConfig.ngrok_url || ''
+    // Return the current domain as base URL
+    return baseUrl || (typeof window !== 'undefined' ? window.location.origin : '')
   }
 
   // Load live widget in preview
@@ -598,10 +588,7 @@ export default function WidgetPage() {
       NODE_ENV: process.env.NODE_ENV
     })
     
-    const baseUrl = systemConfig.ngrok_url || 
-                    process.env.NEXT_PUBLIC_API_URL || 
-                    process.env.FLASK_API_URL || 
-                    'http://localhost:3034'
+    const currentBaseUrl = getDefaultUrl()
     
     console.log('Selected baseUrl:', baseUrl)
     
@@ -609,7 +596,7 @@ export default function WidgetPage() {
 <script>
   (function() {
     var script = document.createElement('script');
-    script.src = '${baseUrl}/widget/${apiKey}.js';
+    script.src = '${currentBaseUrl}/widget/${apiKey}.js';
     script.async = true;
     script.onerror = function() {
       console.error('Failed to load Livara ChatBot widget. Please check your API key.');
@@ -645,10 +632,8 @@ export default function WidgetPage() {
         currentOrigin: window.location.origin
       })
       
-      const baseUrl = systemConfig.ngrok_url || 
-                      process.env.NEXT_PUBLIC_API_URL || 
-                      'http://localhost:3034' // Direct fallback to backend
-      const scriptUrl = `${baseUrl}/widget/${selectedEmbedKey.api_key}.js`
+      const currentBaseUrl = getDefaultUrl()
+      const scriptUrl = `${currentBaseUrl}/widget/${selectedEmbedKey.api_key}.js`
       
       console.log('Loading widget from:', scriptUrl)
       console.log('Selected API key:', selectedEmbedKey.api_key)
@@ -933,7 +918,7 @@ export default function WidgetPage() {
                         id="keyUrl"
                         value={newKeyUrl}
                         onChange={(e) => setNewKeyUrl(e.target.value)}
-                        placeholder="https://your-ngrok-url.ngrok-free.app"
+                        placeholder="Will use current domain automatically"
                         className="glass-input"
                       />
                       <p className="text-xs text-gray-500 mt-1">
@@ -1153,7 +1138,7 @@ export default function WidgetPage() {
                     apiKey={selectedEmbedKey.api_key}
                     keyName={selectedEmbedKey.key_name}
                     teamId={selectedEmbedKey.team_id || user?.team_id}
-                    serverUrl={selectedEmbedKey.ngrok_url || systemConfig.ngrok_url || getDefaultUrl()}
+                    serverUrl={getDefaultUrl()}
                     onSuccess={() => showNotification('Plugin generated successfully!')}
                     onError={(error: string) => showNotification(error, 'error')}
                   />

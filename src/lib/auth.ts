@@ -92,7 +92,7 @@ export function requireAuth(handler: (req: NextRequest, user: JWTPayload) => Pro
 export function requireAdmin(handler: (req: NextRequest, user: JWTPayload) => Promise<Response>) {
   return async (request: NextRequest) => {
     const user = await getAuthenticatedUser(request)
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
       return new Response('Forbidden', { status: 403 })
     }
     return handler(request, user)

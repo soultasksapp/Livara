@@ -202,7 +202,7 @@ export async function getWidgetKeysByTeam(teamId: number) {
     .from('team_widget_keys')
     .select('*')
     .eq('team_id', teamId)
-    .order('created_at', { ascending: false })
+    .order('timestamp', { ascending: false })
   
   if (error) throw error
   return data || []
@@ -413,7 +413,7 @@ export async function getContactsByTeam(teamId: number) {
     .from('contacts')
     .select('*')
     .eq('team_id', teamId)
-    .order('created_at', { ascending: false })
+    .order('timestamp', { ascending: false })
   
   if (error) throw error
   return data || []
@@ -426,7 +426,7 @@ export async function getAllContacts() {
       *,
       teams(name)
     `)
-    .order('created_at', { ascending: false })
+    .order('timestamp', { ascending: false })
   
   if (error) throw error
   return data || []

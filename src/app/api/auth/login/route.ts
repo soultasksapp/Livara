@@ -29,13 +29,17 @@ export async function POST(request: NextRequest) {
       team_id: user.team_id
     })
 
-    // Log the login event
-    await logAuditEvent({
-      user_id: user.id,
-      action: 'login',
-      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-      user_agent: request.headers.get('user-agent') || 'unknown'
-    })
+    // Log the login event (optional - won't fail if table doesn't exist)
+    try {
+      await logAuditEvent({
+        user_id: user.id,
+        action: 'login',
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+        user_agent: request.headers.get('user-agent') || 'unknown'
+      })
+    } catch (auditError) {
+      console.warn('Audit logging failed:', auditError)
+    }
 
     return NextResponse.json({
       success: true,
