@@ -438,7 +438,7 @@ export async function logAuditEvent(eventData: {
   action: string
   entity_type?: string
   entity_id?: number
-  details?: any
+  details?: Record<string, unknown>
   ip_address?: string
   user_agent?: string
 }) {

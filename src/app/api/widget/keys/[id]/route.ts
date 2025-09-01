@@ -101,7 +101,7 @@ export async function PUT(
       }
 
       // Prepare update data
-      const updateData: any = {}
+      const updateData: Record<string, unknown> = {}
       if (name !== undefined) updateData.key_name = name.trim()
       if (is_active !== undefined) updateData.is_active = is_active
 
@@ -133,10 +133,10 @@ export async function PUT(
           last_used_at: updatedKey.last_used
         }
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Widget key update error:', error)
       
-      if (error.code === '23505') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         return NextResponse.json(
           { success: false, error: 'API key name already exists for this team' },
           { status: 400 }

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createUser } from '@/lib/database'
-import { hashPassword, createJWT, requireAdmin } from '@/lib/auth'
+import { hashPassword, requireAdmin } from '@/lib/auth'
 
-export const POST = requireAdmin(async (request: NextRequest, adminUser) => {
+export const POST = requireAdmin(async (request: NextRequest) => {
   try {
     const { email, password, name, role = 'user', team_id } = await request.json()
 
@@ -46,11 +46,11 @@ export const POST = requireAdmin(async (request: NextRequest, adminUser) => {
         team_id: newUser.team_id
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Registration error:', error)
     
     // Handle unique constraint violation (duplicate email)
-    if (error.code === '23505') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return NextResponse.json(
         { success: false, error: 'Email already exists' },
         { status: 400 }

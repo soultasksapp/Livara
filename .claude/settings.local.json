@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git branch:*)",
+      "Bash(npm run build:*)",
+      "Bash(grep:*)",
+      "Bash(cp:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install react-hook-form zod)",
+      "Bash(npm run lint:*)",
+      "Bash(npx eslint:*)",
+      "Bash(mv:*)",
+      "Bash(find:*)",
+      "Bash(sed:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { validateWidgetKey, incrementWidgetKeyUsage, getWidgetConfig } from '@/lib/database'
 
+interface WidgetConfig {
+  widget_title?: string
+  widget_subtitle?: string
+  welcome_message?: string
+  input_placeholder?: string
+  primary_color?: string
+  secondary_color?: string
+  widget_position?: string
+  [key: string]: unknown
+}
+
 // Generate widget JavaScript for embedding
 export async function GET(
   request: NextRequest,
@@ -91,7 +102,7 @@ function generateWidgetScript(options: {
   apiKey: string
   teamId: number | null
   teamName: string
-  config: any
+  config: WidgetConfig
   baseUrl: string
 }): string {
   const { apiKey, teamId, teamName, config, baseUrl } = options

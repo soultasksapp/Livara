@@ -111,10 +111,10 @@ export async function PUT(
         created_at: updatedTeam.created_at
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Team update error:', error)
     
-    if (error.code === '23505') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return NextResponse.json(
         { success: false, error: 'Team name already exists' },
         { status: 400 }

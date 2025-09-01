@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -16,7 +15,6 @@ import {
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import {
-  BarChart3,
   MessageSquare,
   Users,
   FileText,
@@ -29,7 +27,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/lib/auth-provider"
 import { apiClient } from "@/lib/api"
 
 const navigationItems = [
@@ -95,7 +93,7 @@ export function AppSidebar() {
     try {
       const response = await apiClient.get('/api/sessions/stats')
       if (response.success && response.data) {
-        const stats = response.data.stats || {}
+        const stats = (response.data as { stats?: { active?: number } })?.stats || {}
         const activeCount = stats.active || 0
         setHasActiveChats(activeCount > 0)
       }

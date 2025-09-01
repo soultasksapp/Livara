@@ -93,10 +93,12 @@ export async function sendToOpenAI(prompt: string, customInstructions?: string):
       success: true,
       response: aiResponse
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('OpenAI API error:', error)
     
-    if (error.code === 'invalid_api_key') {
+    const errorObj = error as { code?: string; message?: string }
+    
+    if (errorObj.code === 'invalid_api_key') {
       return {
         success: false,
         error: "Invalid OpenAI API key"
@@ -105,7 +107,7 @@ export async function sendToOpenAI(prompt: string, customInstructions?: string):
     
     return {
       success: false,
-      error: `OpenAI error: ${error.message || 'Unknown error'}`
+      error: `OpenAI error: ${errorObj.message || 'Unknown error'}`
     }
   }
 }
@@ -170,10 +172,12 @@ export async function sendToOllama(prompt: string, customInstructions?: string):
       success: true,
       response: data.response.trim()
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Ollama API error:', error)
     
-    if (error.code === 'ECONNREFUSED') {
+    const errorObj = error as { code?: string; message?: string }
+    
+    if (errorObj.code === 'ECONNREFUSED') {
       return {
         success: false,
         error: "Cannot connect to Ollama server. Please make sure Ollama is running."
@@ -182,7 +186,7 @@ export async function sendToOllama(prompt: string, customInstructions?: string):
     
     return {
       success: false,
-      error: `Ollama error: ${error.message || 'Unknown error'}`
+      error: `Ollama error: ${errorObj.message || 'Unknown error'}`
     }
   }
 }
@@ -214,11 +218,12 @@ export async function generateLLMResponse(
         return await sendToOllamaWithOptions(options)
       }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('LLM generation error:', error)
+    const errorObj = error as { message?: string }
     return {
       success: false,
-      error: `LLM error: ${error.message || 'Unknown error'}`
+      error: `LLM error: ${errorObj.message || 'Unknown error'}`
     }
   }
 }
@@ -274,13 +279,14 @@ export async function sendToOpenAIWithOptions(options: LLMOptions): Promise<LLMR
       tokensUsed: response.usage?.total_tokens || 0,
       responseTime
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const responseTime = Date.now() - startTime
     console.error('OpenAI API error:', error)
     
+    const errorObj = error as { message?: string }
     return {
       success: false,
-      error: `OpenAI error: ${error.message || 'Unknown error'}`,
+      error: `OpenAI error: ${errorObj.message || 'Unknown error'}`,
       responseTime
     }
   }
@@ -351,11 +357,13 @@ export async function sendToOllamaWithOptions(options: LLMOptions): Promise<LLMR
       response: data.response.trim(),
       responseTime
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const responseTime = Date.now() - startTime
     console.error('Ollama API error:', error)
     
-    if (error.code === 'ECONNREFUSED') {
+    const errorObj = error as { code?: string; message?: string }
+    
+    if (errorObj.code === 'ECONNREFUSED') {
       return {
         success: false,
         error: "Cannot connect to Ollama server. Please make sure Ollama is running.",
@@ -365,7 +373,7 @@ export async function sendToOllamaWithOptions(options: LLMOptions): Promise<LLMR
     
     return {
       success: false,
-      error: `Ollama error: ${error.message || 'Unknown error'}`,
+      error: `Ollama error: ${errorObj.message || 'Unknown error'}`,
       responseTime
     }
   }

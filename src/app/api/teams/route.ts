@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, requireAdmin } from '@/lib/auth'
-import { createTeam, getAllTeams, updateTeam, getTeamById } from '@/lib/database'
+import { createTeam, getAllTeams, getTeamById } from '@/lib/database'
 import { logAuditEvent } from '@/lib/database'
 
 // GET - List all teams (admin only) or user's team
@@ -92,11 +92,11 @@ export const POST = requireAdmin(async (request: NextRequest, user) => {
         created_at: newTeam.created_at
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Team creation error:', error)
     
     // Handle unique constraint violation
-    if (error.code === '23505') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return NextResponse.json(
         { success: false, error: 'Team name already exists' },
         { status: 400 }

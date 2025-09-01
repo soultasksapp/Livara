@@ -116,17 +116,17 @@ export async function POST(request: NextRequest) {
           created_at: newKey.created_at
         }
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Widget key creation error:', error)
       
-      if (error.code === '23503') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
         return NextResponse.json(
           { success: false, error: 'Team not found' },
           { status: 400 }
         )
       }
 
-      if (error.code === '23505') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         return NextResponse.json(
           { success: false, error: 'API key name already exists for this team' },
           { status: 400 }

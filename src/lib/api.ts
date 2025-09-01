@@ -12,7 +12,7 @@ class ApiClient {
   private baseURL: string = ''
 
   constructor() {
-    // Base URL is handled by Next.js, so we use relative paths
+    // Base URL is handled by Next.js rewrites, so we use relative paths
     this.baseURL = ''
     
     // Initialize token from localStorage if available
@@ -38,6 +38,7 @@ class ApiClient {
   private getHeaders(contentType: string = 'application/json'): HeadersInit {
     const headers: HeadersInit = {}
 
+    // Only set Content-Type if it's not multipart/form-data (browser handles it automatically for FormData)
     if (contentType !== 'multipart/form-data') {
       headers['Content-Type'] = contentType
     }
@@ -50,6 +51,7 @@ class ApiClient {
   }
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    // First get the response text, then try to parse as JSON
     const responseText = await response.text()
     
     try {
@@ -68,6 +70,7 @@ class ApiClient {
         }
       }
     } catch (error) {
+      // If JSON parsing fails, provide the actual response for debugging
       console.error('Failed to parse response as JSON:', responseText)
       return {
         success: false,
@@ -99,6 +102,7 @@ class ApiClient {
       let contentType = 'application/json'
 
       if (data instanceof FormData) {
+        // For FormData, let browser set Content-Type with boundary
         body = data
         contentType = 'multipart/form-data'
       } else if (data) {
@@ -157,7 +161,27 @@ class ApiClient {
       }
     }
   }
+
+  async downloadFile(url: string): Promise<Blob | null> {
+    try {
+      const response = await fetch(`${this.baseURL}${url}`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+        credentials: 'include'
+      })
+
+      if (response.ok) {
+        return await response.blob()
+      } else {
+        console.error('Download failed:', response.statusText)
+        return null
+      }
+    } catch (error) {
+      console.error('Download error:', error)
+      return null
+    }
+  }
 }
 
+// Export a singleton instance
 export const apiClient = new ApiClient()
-export { type ApiResponse }

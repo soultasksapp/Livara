@@ -118,7 +118,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (name !== undefined) updateData.name = name
     if (email !== undefined) updateData.email = email
@@ -167,10 +167,10 @@ export async function PUT(
         last_login: updatedUser.last_login
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User update error:', error)
     
-    if (error.code === '23505') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return NextResponse.json(
         { success: false, error: 'Email already exists' },
         { status: 400 }

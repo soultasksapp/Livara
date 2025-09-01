@@ -101,11 +101,11 @@ export const POST = requireAdmin(async (request: NextRequest, user) => {
         created_at: newUser.created_at
       }
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('User creation error:', error)
     
     // Handle unique constraint violation (duplicate email)
-    if (error.code === '23505') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
       return NextResponse.json(
         { success: false, error: 'Email already exists' },
         { status: 400 }

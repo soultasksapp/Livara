@@ -8,9 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Search, Bell, Settings, User, LogOut, MessageSquare, Users, FileText, Brain, Building } from "lucide-react"
+import { Search, Settings, User, LogOut, MessageSquare, Users, FileText, Brain, Building } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth"
+import { useAuth } from "@/lib/auth-provider"
 import { apiClient } from "@/lib/api"
 
 const pageNames: Record<string, string> = {
@@ -30,7 +30,15 @@ interface SearchResult {
   title: string
   subtitle?: string
   url: string
-  icon: any
+  icon: React.ElementType
+}
+
+interface DocumentSearchResult {
+  original_filename?: string
+  filename: string
+  team_name?: string
+  approval_status: string
+  file_size: number
 }
 
 const navigationItems = [
@@ -233,8 +241,8 @@ export function TopBar() {
     // Search documents with team-based security
     try {
       const documentResponse = await apiClient.get(`/api/documents/search?q=${encodeURIComponent(query)}`)
-      if (documentResponse.success && documentResponse.data?.documents) {
-        documentResponse.data.documents.forEach((doc: any) => {
+      if (documentResponse.success && (documentResponse.data as { documents?: DocumentSearchResult[] })?.documents) {
+        (documentResponse.data as { documents: DocumentSearchResult[] }).documents.forEach((doc: DocumentSearchResult) => {
           results.push({
             type: 'document',
             title: doc.original_filename || doc.filename,
@@ -318,7 +326,7 @@ export function TopBar() {
               ) : searchQuery.trim() && (
                 <div className="p-4 text-center text-gray-400">
                   <Search className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <span>No results found for "{searchQuery}"</span>
+                  <span>No results found for &quot;{searchQuery}&quot;</span>
                 </div>
               )}
             </div>

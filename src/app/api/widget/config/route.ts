@@ -141,10 +141,10 @@ export async function POST(request: NextRequest) {
         message: 'Widget configuration updated successfully',
         config
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Widget config POST error:', error)
       
-      if (error.code === '23503') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23503') {
         return NextResponse.json(
           { success: false, error: 'Team not found' },
           { status: 400 }

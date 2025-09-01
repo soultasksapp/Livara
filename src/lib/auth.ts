@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { jwtVerify, SignJWT } from 'jose'
 import * as bcrypt from 'bcryptjs'
-import { getUserById, getUserByEmail } from './database'
+import { getUserByEmail } from './database'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
 
@@ -9,9 +9,11 @@ export interface JWTPayload {
   user_id: number
   email: string
   name: string
-  role: 'admin' | 'user'
+  role: 'super_admin' | 'admin' | 'user'
   team_id?: number
-  [key: string]: any // Index signature for jose compatibility
+  widget_access?: boolean
+  profile_color?: string
+  [key: string]: unknown
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -116,10 +118,10 @@ export function requireTeamAccess(handler: (req: NextRequest, user: JWTPayload) 
 // Client-side auth hook (simple placeholder)
 export function useAuth() {
   return {
-    user: null as any,
+    user: null as JWTPayload | null,
     login: () => {},
     logout: () => {},
-    refreshUser: () => {},
+    refreshUser: () => Promise.resolve(),
     isLoading: false
   }
 }
